@@ -3,10 +3,10 @@ import { Calendar, Wifi, WifiOff } from 'lucide-react';
 import { AndroidOptimizedVoiceButton } from './components/AndroidOptimizedVoiceButton';
 import { CalendarPopup } from './components/CalendarPopup';
 import { MemoItem } from './components/MemoItem';
-import { WhisperTranscriptionPanel } from './components/WhisperTranscriptionPanel';
+//import { WhisperTranscriptionPanel } from './components/WhisperTranscriptionPanel';
 import { useMemos } from './hooks/IndexedDBMemo';
 import { useAndroidVoiceRecognition } from './hooks/AndroidVoiceRecognition';
-import { useWhisperTranscription } from './hooks/useWhisperTranscription';
+//import { useWhisperTranscription } from './hooks/useWhisperTranscription';
 import { usePWAManager } from './hooks/PWAManager';
 
 function App() {
@@ -23,6 +23,21 @@ function App() {
     platformInfo 
   } = useAndroidVoiceRecognition();
   
+  //ダミーフック
+  function useWhisperTranscription() {
+  return {
+    recordings: [],
+    isRecording: false,
+    isTranscribing: false,
+    transcriptionProgress: null,
+    initialize: () => {},
+    startRecording: async () => {},
+    stopRecording: async () => {},
+    transcribeAudio: async () => {},
+    deleteRecording: async () => {},
+    formatDuration: (ms: number) => '0:00',
+  };
+}
   const {
     recordings,
     isRecording: isWhisperRecording,
@@ -154,7 +169,7 @@ function App() {
         }}
       >
         {/* テキスト化パネル表示切り替えボタン */}
-        <div className="mb-4">
+        {/*<div className="mb-4">
           <button
             onClick={() => setShowTranscriptionPanel(!showTranscriptionPanel)}
             className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
@@ -162,8 +177,10 @@ function App() {
             <span>{showTranscriptionPanel ? 'Whisperパネルを閉じる' : 'Whisperパネルを開く'}</span>
           </button>
         </div>
+        */}
 
         {/* Whisper文字起こしパネル */}
+        {/*
         {showTranscriptionPanel && (
           <WhisperTranscriptionPanel
             recordings={recordings}
@@ -177,6 +194,7 @@ function App() {
             formatDuration={formatDuration}
           />
         )}
+        */}
 
         {/* 音声認識状態表示 */}
         {isRecording && (

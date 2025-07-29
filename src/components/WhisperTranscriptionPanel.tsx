@@ -1,24 +1,24 @@
 import React, { useState, useRef } from 'react';
 import { Play, Pause, Trash2, FileText, Mic, MicOff, Download, MessageSquare } from 'lucide-react';
-import { AudioRecording, TranscriptionProgress } from '../hooks/useWhisperTranscription';
+//import { AudioRecording, TranscriptionProgress } from '../hooks/useWhisperTranscription';
 
 interface WhisperTranscriptionPanelProps {
-  recordings: AudioRecording[];
+  recordings: any[]; //型をany[]に
   isRecording: boolean;
   isTranscribing: boolean;
-  transcriptionProgress: TranscriptionProgress | null;
+  transcriptionProgress: any | null;
   onStartRecording: () => Promise<void>;
-  onStopRecording: () => Promise<AudioRecording>;
+  onStopRecording: () => Promise<void>;
   onTranscribe: (recordingId: string) => Promise<void>;
   onDelete: (recordingId: string) => Promise<void>;
   formatDuration: (ms: number) => string;
 }
 
 export const WhisperTranscriptionPanel: React.FC<WhisperTranscriptionPanelProps> = ({
-  recordings,
+  recordings  = [],
   isRecording,
   isTranscribing,
-  transcriptionProgress,
+  transcriptionProgress = null,
   onStartRecording,
   onStopRecording,
   onTranscribe,
@@ -30,7 +30,7 @@ export const WhisperTranscriptionPanel: React.FC<WhisperTranscriptionPanelProps>
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 音声再生
-  const playAudio = (recording: AudioRecording) => {
+  const playAudio = (recording: any) => {
     if (playingId === recording.id) {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -98,7 +98,7 @@ export const WhisperTranscriptionPanel: React.FC<WhisperTranscriptionPanelProps>
   };
 
   // 音声ダウンロード
-  const downloadAudio = (recording: AudioRecording) => {
+  const downloadAudio = (recording: any) => {
     const link = document.createElement('a');
     link.href = recording.audioUrl;
     link.download = `whisper_audio_${recording.timestamp.toISOString().slice(0, 19).replace(/:/g, '-')}.wav`;

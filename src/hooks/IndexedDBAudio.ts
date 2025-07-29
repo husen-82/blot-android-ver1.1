@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, MicOff, Play, Pause, Download, Trash2 } from 'lucide-react';
+//import { Mic, MicOff, Play, Pause, Download, Trash2 } from 'lucide-react';
 import { sendAudioToBackend } from './sentBackend'; // 追加: バックエンド送信関数のインポート
 
 declare global {
@@ -207,10 +207,10 @@ export const useVoiceRecognition = () => {
   
   // 音声認識の継続管理用のref
   const accumulatedTranscriptRef = useRef<string>('');
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRecognitionActiveRef = useRef<boolean>(false);
   const lastSpeechTimeRef = useRef<number>(0);
-  const speechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const speechTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRestartingRef = useRef<boolean>(false);
   const lastInterimResultRef = useRef<string>('');
 

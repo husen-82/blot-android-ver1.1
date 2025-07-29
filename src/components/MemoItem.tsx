@@ -87,7 +87,7 @@ export const MemoItem: React.FC<MemoItemProps> = ({ memo, onDelete }) => {
 
       // 新しいAudioインスタンスを作成
       const audio = new Audio();
-      audioRef.current = audio;
+      // audioRef.current は読み取り専用なので、audio変数のみを使用
 
       // 音声データの形式を確認して適切に設定
       if (memo.audioRecording.audioUrl) {
@@ -106,12 +106,12 @@ export const MemoItem: React.FC<MemoItemProps> = ({ memo, onDelete }) => {
       audio.onplay = () => setIsPlaying(true);
       audio.onended = () => {
         setIsPlaying(false);
-        audioRef.current = null;
+        // audioRef.current = null; // 削除
       };
       audio.onerror = (e) => {
         console.error('音声再生エラー:', e);
         setIsPlaying(false);
-        audioRef.current = null;
+        // audioRef.current = null; // 削除
         alert('音声の再生に失敗しました');
       };
 
@@ -122,7 +122,7 @@ export const MemoItem: React.FC<MemoItemProps> = ({ memo, onDelete }) => {
     } catch (error) {
       console.error('音声再生エラー:', error);
       setIsPlaying(false);
-      audioRef.current = null;
+      // audioRef.current = null; // 削除: currentは読み取り専用
       alert('音声の再生に失敗しました');
     }
   };
@@ -132,7 +132,6 @@ export const MemoItem: React.FC<MemoItemProps> = ({ memo, onDelete }) => {
       // コンポーネントアンマウント時のクリーンアップ
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current = null;
       }
     };
   }, []);

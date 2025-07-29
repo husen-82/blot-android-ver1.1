@@ -514,7 +514,7 @@ export const useMemos = () => {
     async (
       audioRecording: AudioRecording, 
       additionalText?: string, 
-      backendUrl1?: string  // 追加のテキストを取得するためのバックエンドURL
+      backendUrl: string = 'http://localhost:5000/api/transcribe'  // 追加のテキストを取得するためのバックエンドURL
     ) => {
     if (memos.length >= 15) {
       alert('メモの数が上限（15個）に達しました。古いメモを削除してください。');

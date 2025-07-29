@@ -18,7 +18,7 @@ export const AndroidOptimizedVoiceButton: React.FC<AndroidOptimizedVoiceButtonPr
 }) => {
   const [isPressed, setIsPressed] = useState(false);
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef<boolean>(false);
 
   // Android向けハプティックフィードバック
