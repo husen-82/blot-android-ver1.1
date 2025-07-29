@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <meta name="theme-color" content="#007bff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ふせん君" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    
+    <meta name="description" content="Android最適化された音声入力・文字起こし忘備録アプリ。" />
+    <meta name="keywords" content="音声入力,文字起こし,メモ,Android" />
+    <meta name="author" content="ふせん君開発チーム" />
+    
+    <meta property="og:title" content="ふせん君 - 音声入力忘備録アプリ" />
+    <meta property="og:description" content="Android最適化された音声入力・文字起こし忘備録アプリ" />
+    <meta property="og:type" content="website" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ふせん君 - 音声入力忘備録アプリ" />
+    <meta name="twitter:description" content="Android最適化された音声入力・文字起こし忘備録アプリ" />
+    
+    <title>ふせん君 - 音声入力忘備録アプリ</title>
+    
+    <style>
+      /* Critical loading styles */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+      }
+      
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        animation: loading-pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes loading-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      .loading-text {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      
+      .loading-subtext {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      
+      /* Hide loading screen when app is ready */
+      .app-ready .loading-screen {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-logo">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 12L11 14L15 10" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="loading-text">ふせん君</div>
+      <div class="loading-subtext">音声入力アプリを読み込み中...</div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // Hide loading screen when app is ready
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          document.body.classList.add('app-ready');
+        }, 1000);
+      });
+      
+      // Android向けビューポート調整
+      function adjustViewport() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+      
+      window.addEventListener('resize', adjustViewport);
+      window.addEventListener('orientationchange', adjustViewport);
+      adjustViewport();
+      
+      // Android向けキーボード対応
+      if (/Android/i.test(navigator.userAgent)) {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+          viewport.setAttribute('content', 
+            'width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content'
+          );
+        }
+      }
+      
+      // Performance monitoring
+      window.addEventListener('load', () => {
+        if ('performance' in window) {
+          const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+          console.log('Page load time:', loadTime + 'ms');
+        }
+      });
+
+      // =========================================================
+      // ここから Whisper.wasm 統合のための追加部分
+      // =========================================================
+
+      // Module オブジェクトの設定
+      // Emscripten が WASM やモデルファイルを探すための設定
+      var Module = {
+          locateFile: function(path, prefix) {
+              // Netlify にデプロイした Whisper.wasm のURLをここに指定
+              // 'https://your-netlify-site.netlify.app/' を実際のURLに置き換えてください
+              const BASE_WASM_URL = 'https://whisper-wasm-demo.netlify.app/'; 
+
+              if (path.endsWith('.wasm')) {
+                  return BASE_WASM_URL + 'whisper.wasm';
+              }
+              if (path.endsWith('.bin')) {
+                  return BASE_WASM_URL + 'ggml-tiny.en.bin';
+              }
+              // libmain.js が他のJSファイルを参照する場合（例: helpers.js など）
+              // libmain.jsと同じ場所に置いていれば、prefixだけでOK
+              if (path.endsWith('.js') && !path.startsWith('http')) {
+                  return BASE_WASM_URL + path; // 例：helpers.js など
+              }
+              return prefix + path;
+          },
+          // Emscripten が WASM ランタイムの初期化を完了したときに呼び出される
+          onRuntimeInitialized: function() {
+              console.log("Whisper.wasm runtime initialized.");
+              // ここで、アプリケーションの残りの部分が Whisper の API を利用できるように、
+              // Promise を解決したり、カスタムイベントを発火したりできます。
+              // 例: window.dispatchEvent(new CustomEvent('whisperReady'));
+          },
+          // WASMロード時の進捗やエラーを捕捉するためのオプション（任意）
+          monitorRunDependencies: function(left) {
+              if (left === 0) {
+                  console.log("All WASM dependencies loaded.");
+              } else {
+                  console.log("Remaining WASM dependencies to load: " + left);
+              }
+          },
+          // エラーハンドリング（任意）
+          printErr: function(text) {
+              if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+              console.error(text);
+          }
+      };
+    </script>
+
+    <script src="https://husen-82.netlify.app/libmain.js"></script> 
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
