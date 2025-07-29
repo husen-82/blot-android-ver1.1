@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Play, Pause, Trash2, FileText, Mic, MicOff, Download, MessageSquare } from 'lucide-react';
-import { AudioRecording, TranscriptionProgress } from '../hooks/useWhisperTranscription';
+//import { AudioRecording, TranscriptionProgress } from '../hooks/useWhisperTranscription';
 
 interface WhisperTranscriptionPanelProps {
   recordings: AudioRecording[];
