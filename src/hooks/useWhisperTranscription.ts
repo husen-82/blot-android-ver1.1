@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 
-/*declare global {
+declare global {
   interface Window {
     Module: EmscriptenModule & {
       //index.htmlから特定されたAPI
