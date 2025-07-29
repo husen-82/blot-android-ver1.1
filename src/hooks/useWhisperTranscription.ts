@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 
-declare global {
+/*declare global {
   interface Window {
     Module: EmscriptenModule & {
       //index.htmlから特定されたAPI
@@ -570,7 +570,7 @@ export const useWhisperTranscription = () => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  }, []);
+  }, []);*/
 
   return {
     recordings,
