@@ -3,10 +3,10 @@ import { Calendar, Wifi, WifiOff } from 'lucide-react';
 import { AndroidOptimizedVoiceButton } from './components/AndroidOptimizedVoiceButton';
 import { CalendarPopup } from './components/CalendarPopup';
 import { MemoItem } from './components/MemoItem';
-import { WhisperTranscriptionPanel } from './components/WhisperTranscriptionPanel';
+//import { WhisperTranscriptionPanel } from './components/WhisperTranscriptionPanel';
 import { useMemos } from './hooks/IndexedDBMemo';
 import { useAndroidVoiceRecognition } from './hooks/AndroidVoiceRecognition';
-import { useWhisperTranscription } from './hooks/useWhisperTranscription';
+//import { useWhisperTranscription } from './hooks/useWhisperTranscription';
 import { usePWAManager } from './hooks/PWAManager';
 
 function App() {
