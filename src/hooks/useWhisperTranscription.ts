@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+/*import { useState, useRef, useCallback } from 'react';
 
 declare global {
   interface Window {
@@ -584,4 +584,4 @@ export const useWhisperTranscription = () => {
     deleteRecording,
     formatDuration
   };
-};
+}; */
