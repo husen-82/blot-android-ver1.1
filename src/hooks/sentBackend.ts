@@ -4,7 +4,7 @@ import { AudioRecording } from './IndexedDBAudio';
 // 音声データはAudioRecording型で、audioBlobとtranscriptを含む
 export const sendAudioToBackend = async (
   audio: AudioRecording,
-  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app' // 開発環境のバックエンドURL ngrokでトンネリングしたwhisper.backendのURL
+  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe' // 開発環境のバックエンドURL ngrokでトンネリングしたwhisper.backendのURL
 ): Promise<boolean> => {
   try {
     const formData = new FormData();
