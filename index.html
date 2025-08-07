@@ -133,51 +133,10 @@
       // ここから Whisper.wasm 統合のための追加部分
       // =========================================================
 
-      // Module オブジェクトの設定
-      // Emscripten が WASM やモデルファイルを探すための設定
-      var Module = {
-          locateFile: function(path, prefix) {
-              // Netlify にデプロイした Whisper.wasm のURLをここに指定
-              // 'https://your-netlify-site.netlify.app/' を実際のURLに置き換えてください
-              const BASE_WASM_URL = 'https://whisper-wasm-demo.netlify.app/'; 
-
-              if (path.endsWith('.wasm')) {
-                  return BASE_WASM_URL + 'whisper.wasm';
-              }
-              if (path.endsWith('.bin')) {
-                  return BASE_WASM_URL + 'ggml-tiny.en.bin';
-              }
-              // libmain.js が他のJSファイルを参照する場合（例: helpers.js など）
-              // libmain.jsと同じ場所に置いていれば、prefixだけでOK
-              if (path.endsWith('.js') && !path.startsWith('http')) {
-                  return BASE_WASM_URL + path; // 例：helpers.js など
-              }
-              return prefix + path;
-          },
-          // Emscripten が WASM ランタイムの初期化を完了したときに呼び出される
-          onRuntimeInitialized: function() {
-              console.log("Whisper.wasm runtime initialized.");
-              // ここで、アプリケーションの残りの部分が Whisper の API を利用できるように、
-              // Promise を解決したり、カスタムイベントを発火したりできます。
-              // 例: window.dispatchEvent(new CustomEvent('whisperReady'));
-          },
-          // WASMロード時の進捗やエラーを捕捉するためのオプション（任意）
-          monitorRunDependencies: function(left) {
-              if (left === 0) {
-                  console.log("All WASM dependencies loaded.");
-              } else {
-                  console.log("Remaining WASM dependencies to load: " + left);
-              }
-          },
-          // エラーハンドリング（任意）
-          printErr: function(text) {
-              if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-              console.error(text);
-          }
-      };
+      // Whisper.wasm統合は一時的に無効化（モバイル互換性のため）
+      console.log("Whisper.wasm integration disabled for mobile compatibility");
     </script>
 
-    <script src="https://husen-82.netlify.app/libmain.js"></script> 
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

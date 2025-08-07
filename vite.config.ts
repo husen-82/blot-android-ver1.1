@@ -95,17 +95,17 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5500, // port 5500用の追加コード
     strictPort: true,
-  /*  headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'credentialless',
       'Cross-Origin-Opener-Policy': 'same-origin'
-    }*/
+    }
   },
   preview: {
     port: 4173,
-   /* headers: {
+    headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin'
-    }*/
+    }
   },
-  base: '/bolt-android-project/', //port 5500用の追加コード
+  base: '/', // Netlifyデプロイ用にベースパスを修正
 });

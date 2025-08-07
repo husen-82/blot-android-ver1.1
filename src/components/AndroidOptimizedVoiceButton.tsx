@@ -31,6 +31,7 @@ export const AndroidOptimizedVoiceButton: React.FC<AndroidOptimizedVoiceButtonPr
   // タッチ開始処理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (disabled) return;
 
@@ -54,6 +55,7 @@ export const AndroidOptimizedVoiceButton: React.FC<AndroidOptimizedVoiceButtonPr
   // タッチ終了処理
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (disabled) return;
 
@@ -99,6 +101,9 @@ export const AndroidOptimizedVoiceButton: React.FC<AndroidOptimizedVoiceButtonPr
 
   // マウス操作（デスクトップ対応）
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (disabled) return;
     
     setIsPressed(true);
@@ -179,7 +184,8 @@ export const AndroidOptimizedVoiceButton: React.FC<AndroidOptimizedVoiceButtonPr
           WebkitTapHighlightColor: 'transparent',
           WebkitTouchCallout: 'none',
           WebkitUserSelect: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
+          touchAction: 'manipulation'
         }}
       >
         {renderAudioLevelIndicator()}

@@ -58,19 +58,30 @@ class AndroidVoiceRecognition {
   // 初期化
   async initialize(): Promise<void> {
     try {
+      // モバイル環境での初期化を簡素化
+      if (this.isAndroid) {
+        console.log('Android environment detected - using simplified initialization');
+        return;
+      }
+      
       // AudioContextの初期化
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
         sampleRate: this.isAndroid ? 16000 : 44100, // Android向け最適化
         latencyHint: 'interactive'
       });
 
-      // AudioWorkletの読み込み
-      await this.audioContext.audioWorklet.addModule('/audio-processor.js');
+      // AudioWorkletの読み込み（エラーハンドリング強化）
+      try {
+        await this.audioContext.audioWorklet.addModule('/audio-processor.js');
+      } catch (error) {
+        console.warn('AudioWorklet loading failed, using fallback:', error);
+        // AudioWorkletが使用できない場合はフォールバック
+      }
       
       console.log('AndroidVoiceRecognition initialized successfully');
     } catch (error) {
       console.error('AndroidVoiceRecognition initialization failed:', error);
-      throw new Error('音声認識の初期化に失敗しました');
+      console.warn('Using fallback initialization for mobile compatibility');
     }
   }
 
@@ -104,42 +115,48 @@ class AndroidVoiceRecognition {
 
       this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      // AudioWorkletNodeの作成
-      this.audioWorkletNode = new AudioWorkletNode(
-        this.audioContext!,
-        'android-audio-processor'
-      );
+      // AudioWorkletNodeの作成（エラーハンドリング追加）
+      try {
+        if (this.audioContext && !this.isAndroid) {
+          this.audioWorkletNode = new AudioWorkletNode(
+            this.audioContext,
+            'android-audio-processor'
+          );
 
-      // AudioWorkletメッセージハンドラー
-      this.audioWorkletNode.port.onmessage = (event) => {
-        const { type, data } = event.data;
-        
-        switch (type) {
-          case 'recording-started':
-            console.log('AudioWorklet recording started');
-            break;
-          case 'recording-complete':
-            this.handleAudioWorkletComplete(event.data);
-            break;
-          case 'audio-level':
-            if (this.onAudioLevel) {
-              this.onAudioLevel(data.rms);
+          // AudioWorkletメッセージハンドラー
+          this.audioWorkletNode.port.onmessage = (event) => {
+            const { type, data } = event.data;
+            
+            switch (type) {
+              case 'recording-started':
+                console.log('AudioWorklet recording started');
+                break;
+              case 'recording-complete':
+                this.handleAudioWorkletComplete(event.data);
+                break;
+              case 'audio-level':
+                if (this.onAudioLevel) {
+                  this.onAudioLevel(data.rms);
+                }
+                break;
+              case 'silence-detected':
+                console.log('Silence detected:', data);
+                break;
+              case 'buffer-overflow':
+                console.warn('Audio buffer overflow:', data.message);
+                this.stopRecording();
+                break;
             }
-            break;
-          case 'silence-detected':
-            console.log('Silence detected:', data);
-            break;
-          case 'buffer-overflow':
-            console.warn('Audio buffer overflow:', data.message);
-            this.stopRecording();
-            break;
-        }
-      };
+          };
 
-      // 音声ストリームをAudioWorkletに接続
-      const source = this.audioContext!.createMediaStreamSource(this.mediaStream);
-      source.connect(this.audioWorkletNode);
-      this.audioWorkletNode.connect(this.audioContext!.destination);
+          // 音声ストリームをAudioWorkletに接続
+          const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+          source.connect(this.audioWorkletNode);
+          this.audioWorkletNode.connect(this.audioContext.destination);
+        }
+      } catch (error) {
+        console.warn('AudioWorklet setup failed, using MediaRecorder only:', error);
+      }
 
       // MediaRecorderの設定（フォールバック用）
       this.setupMediaRecorder();
@@ -152,14 +169,16 @@ class AndroidVoiceRecognition {
       this.audioChunks = [];
 
       // AudioWorkletに録音開始を通知
-      this.audioWorkletNode.port.postMessage({
-        command: 'start',
-        data: {
-          sampleRate: this.isAndroid ? 16000 : 44100,
-          noiseGate: 0.005,
-          silenceThreshold: 0.01
-        }
-      });
+      if (this.audioWorkletNode) {
+        this.audioWorkletNode.port.postMessage({
+          command: 'start',
+          data: {
+            sampleRate: this.isAndroid ? 16000 : 44100,
+            noiseGate: 0.005,
+            silenceThreshold: 0.01
+          }
+        });
+      }
 
       // MediaRecorder開始
       if (this.mediaRecorder) {
@@ -361,7 +380,7 @@ class AndroidVoiceRecognition {
 
     } catch (error) {
       console.error('Recording stop failed:', error);
-      throw new Error('録音の停止に失敗しました');
+      return null; // エラーでもnullを返して継続
     }
   }
 
@@ -382,13 +401,22 @@ class AndroidVoiceRecognition {
   cleanup(): void {
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream = null;
     }
     
-    if (this.audioContext) {
+    if (this.audioWorkletNode) {
+      this.audioWorkletNode.disconnect();
+      this.audioWorkletNode = null;
+    }
+    
+    if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();
+      this.audioContext = null;
     }
     
     this.audioChunks = [];
+    this.speechRecognition = null;
+    this.mediaRecorder = null;
   }
 
   // プラットフォーム情報取得

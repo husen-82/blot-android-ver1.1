@@ -3,10 +3,8 @@ import { Calendar, Wifi, WifiOff } from 'lucide-react';
 import { AndroidOptimizedVoiceButton } from './components/AndroidOptimizedVoiceButton';
 import { CalendarPopup } from './components/CalendarPopup';
 import { MemoItem } from './components/MemoItem';
-//import { WhisperTranscriptionPanel } from './components/WhisperTranscriptionPanel';
 import { useMemos } from './hooks/IndexedDBMemo';
 import { useAndroidVoiceRecognition } from './hooks/AndroidVoiceRecognition';
-//import { useWhisperTranscription } from './hooks/useWhisperTranscription';
 import { usePWAManager } from './hooks/PWAManager';
 
 function App() {
@@ -22,34 +20,6 @@ function App() {
     stopRecording, 
     platformInfo 
   } = useAndroidVoiceRecognition();
-  
-  //ダミーフック
-  function useWhisperTranscription() {
-  return {
-    recordings: [],
-    isRecording: false,
-    isTranscribing: false,
-    transcriptionProgress: null,
-    initialize: () => {},
-    startRecording: async () => {},
-    stopRecording: async () => {},
-    transcribeAudio: async () => {},
-    deleteRecording: async () => {},
-    formatDuration: (ms: number) => '0:00',
-  };
-}
-  const {
-    recordings,
-    isRecording: isWhisperRecording,
-    isTranscribing,
-    transcriptionProgress,
-    initialize: initializeWhisperTranscription,
-    startRecording: startWhisperRecording,
-    stopRecording: stopWhisperRecording,
-    transcribeAudio,
-    deleteRecording,
-    formatDuration
-  } = useWhisperTranscription();
   
   const { isOnline } = usePWAManager();
 
@@ -75,8 +45,7 @@ function App() {
   // コンポーネントマウント時に並び順を「古い順」に設定
   useEffect(() => {
     changeSortOrder('oldest-first');
-    initializeWhisperTranscription();
-  }, [changeSortOrder, initializeWhisperTranscription]);
+  }, [changeSortOrder]);
 
   // 30分ごとにメモサイズを更新
   useEffect(() => {
@@ -169,33 +138,6 @@ function App() {
         }}
       >
         {/* テキスト化パネル表示切り替えボタン */}
-        {/*<div className="mb-4">
-          <button
-            onClick={() => setShowTranscriptionPanel(!showTranscriptionPanel)}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
-          >
-            <span>{showTranscriptionPanel ? 'Whisperパネルを閉じる' : 'Whisperパネルを開く'}</span>
-          </button>
-        </div>
-        */}
-
-        {/* Whisper文字起こしパネル */}
-        {/*
-        {showTranscriptionPanel && (
-          <WhisperTranscriptionPanel
-            recordings={recordings}
-            isRecording={isWhisperRecording}
-            isTranscribing={isTranscribing}
-            transcriptionProgress={transcriptionProgress}
-            onStartRecording={startWhisperRecording}
-            onStopRecording={stopWhisperRecording}
-            onTranscribe={transcribeAudio}
-            onDelete={deleteRecording}
-            formatDuration={formatDuration}
-          />
-        )}
-        */}
-
         {/* 音声認識状態表示 */}
         {isRecording && (
           <div className="fixed top-20 left-4 right-4 z-40 bg-red-500 text-white p-3 rounded-lg shadow-lg animate-fade-in">

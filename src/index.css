@@ -21,14 +21,13 @@
   /* PWA向けビューポート設定 */
   html, body {
     height: 100%;
-    overflow: hidden;
-    position: fixed;
+    overflow-x: hidden;
     width: 100%;
   }
 
   #root {
     height: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 }
 
@@ -102,6 +101,11 @@
   
   .voice-button:active {
     transform: scale(0.9);
+  }
+  
+  /* タッチ遅延を削除 */
+  * {
+    touch-action: manipulation;
   }
   
   /* Android向けリップル効果 */
@@ -189,6 +193,7 @@
 .android-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 
 /* 音声認識状態のビジュアルフィードバック */
@@ -224,6 +229,7 @@
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* 音声レベルメーター */
@@ -304,6 +310,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  
+  .animate-pulse {
+    animation: none !important;
+  }
 }
 
 /* Android向けフォーカス表示 */
@@ -326,6 +336,8 @@
 /* Android向けキーボード対応 */
 .keyboard-adjust {
   transition: height 0.3s ease;
+  /* ビューポート単位の問題を修正 */
+  min-height: 0;
 }
 
 /* 音声データ処理中のローディング */
@@ -383,60 +395,12 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
-/* Whisper文字起こし用のアニメーション */
-.whisper-loading {
-  position: relative;
-}
-
-.whisper-loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border: 2px solid #8b5cf6;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: whisper-spin 1s linear infinite;
-}
-
-@keyframes whisper-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Whisper進捗バーのアニメーション */
-.whisper-progress-bar {
-  background: linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc);
-  background-size: 200% 100%;
-  animation: whisper-progress-gradient 2s ease-in-out infinite;
-}
-
-@keyframes whisper-progress-gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Whisper変換結果の表示アニメーション */
-.whisper-result-appear {
-  animation: whisper-fade-in-up 0.5s ease-out;
-}
-
-@keyframes whisper-fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* モバイル向けスクロール改善 */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
