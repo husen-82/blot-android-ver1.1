@@ -162,7 +162,7 @@ class AndroidVoiceRecognition {
       this.setupMediaRecorder();
 
       // Web Speech APIの設定（利用可能な場合）
-      this.setupSpeechRecognition();
+      // this.setupSpeechRecognition();
 
       // 録音開始
       this.recordingStartTime = Date.now();
@@ -186,10 +186,10 @@ class AndroidVoiceRecognition {
       }
 
       // Speech Recognition開始
-      if (this.speechRecognition) {
+      /*if (this.speechRecognition) {
         this.speechRecognition.start();
       }
-
+      */
       if (this.onRecordingStateChange) {
         this.onRecordingStateChange(true);
       }
