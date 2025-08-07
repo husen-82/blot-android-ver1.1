@@ -285,8 +285,8 @@ class AndroidVoiceRecognition {
       }
     };
 
-    /*this.speechRecognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);*/
+    this.speechRecognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
       
       // Android向けエラーハンドリング
       if (this.isAndroid && event.error === 'no-speech') {
