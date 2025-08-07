@@ -134,11 +134,11 @@ class AndroidVoiceRecognition {
               case 'recording-complete':
                 this.handleAudioWorkletComplete(event.data);
                 break;
-              case 'audio-level':
+              /*case 'audio-level':
                 if (this.onAudioLevel) {
                   this.onAudioLevel(data.rms);
                 }
-                break;
+                break;*/
               case 'silence-detected':
                 console.log('Silence detected:', data);
                 break;
