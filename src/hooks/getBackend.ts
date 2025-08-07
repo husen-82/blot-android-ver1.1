@@ -1,7 +1,7 @@
 export const fetchTranscribedText = async (
   audioBlob: Blob,
   transcript: string,
-  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app'
+  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
 ): Promise<string | null> => {
   try {
     const formData = new FormData();
