@@ -513,7 +513,7 @@ export const useMemos = () => {
   const addAudioMemo = useCallback(
     async (
       audioRecording: AudioRecording, 
-      backendUrl: string = 'http://localhost:5000/api/transcribe'
+      backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
     ) => {
     if (memos.length >= 15) {
       alert('メモの数が上限（15個）に達しました。古いメモを削除してください。');
