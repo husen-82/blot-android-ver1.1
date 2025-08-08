@@ -154,7 +154,7 @@ export const useAudioRecording = () => {
   // バックエンドに音声を送信
   const sendAudioToBackendAndSave = useCallback(async (
     recording: AudioRecording, 
-    backendUrl: string = 'http://localhost:5000/api/transcribe'
+    backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
   ): Promise<boolean> => {
     try {
       setIsSending(true);
