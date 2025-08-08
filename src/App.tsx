@@ -83,7 +83,7 @@ function App() {
           await saveAudioRecording(audioRecording);
           
           // 2. バックエンドに音声を送信
-          const backendUrl = 'http://localhost:5000/api/transcribe'; // 実際のバックエンドURLに変更
+          const backendUrl = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'; // 実際のバックエンドURLに変更
           const sendSuccess = await sendAudioToBackendAndSave(audioRecording, backendUrl);
           
           if (sendSuccess) {
