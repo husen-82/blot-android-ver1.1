@@ -39,7 +39,7 @@ export const fetchTranscribedText = async (
 // ポーリングで文字起こし結果を取得する関数
 export const pollTranscribedText = async (
   audioId: string,
-  backendUrl: string = 'http://localhost:5000/api/transcribe',
+  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe',
   maxAttempts: number = 30,
   interval: number = 2000
 ): Promise<{ transcript: string; confidence?: number } | null> => {
