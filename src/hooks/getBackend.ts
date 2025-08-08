@@ -1,7 +1,7 @@
 // バックエンドから文字起こし結果を取得する関数
 export const fetchTranscribedText = async (
   audioId: string,
-  backendUrl: string = 'http://localhost:5000/api/transcribe'
+  backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
 ): Promise<{ transcript: string; confidence?: number } | null> => {
   try {
     console.log('Fetching transcribed text for audio ID:', audioId);
