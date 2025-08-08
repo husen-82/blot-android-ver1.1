@@ -10,19 +10,16 @@ declare global {
 export interface AudioRecording {
   id: string;
   timestamp: Date;
-  transcript: string;
   audioBlob: Blob;
   audioUrl: string;
   duration: number;
 }
 
-// Android最適化音声認識クラス
-class AndroidVoiceRecognition {
+// Android最適化音声録音クラス（WebSpeechAPI削除版）
+class AndroidVoiceRecording {
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
-  private audioWorkletNode: AudioWorkletNode | null = null;
   private mediaRecorder: MediaRecorder | null = null;
-  private speechRecognition: any = null;
   
   // Android検出
   private isAndroid: boolean = false;
@@ -33,7 +30,6 @@ class AndroidVoiceRecognition {
   private recordingStartTime: number = 0;
   
   // コールバック
-  private onTranscriptUpdate?: (transcript: string) => void;
   private onRecordingStateChange?: (isRecording: boolean) => void;
   private onError?: (error: string) => void;
   private onAudioLevel?: (level: number) => void;
@@ -58,29 +54,15 @@ class AndroidVoiceRecognition {
   // 初期化
   async initialize(): Promise<void> {
     try {
-      // モバイル環境での初期化を簡素化
-      if (this.isAndroid) {
-        console.log('Android environment detected - using simplified initialization');
-        return;
-      }
-      
       // AudioContextの初期化
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
-        sampleRate: this.isAndroid ? 16000 : 44100, // Android向け最適化
+        sampleRate: this.isAndroid ? 16000 : 44100,
         latencyHint: 'interactive'
       });
-
-      // AudioWorkletの読み込み（エラーハンドリング強化）
-      try {
-        await this.audioContext.audioWorklet.addModule('/audio-processor.js');
-      } catch (error) {
-        console.warn('AudioWorklet loading failed, using fallback:', error);
-        // AudioWorkletが使用できない場合はフォールバック
-      }
       
-      console.log('AndroidVoiceRecognition initialized successfully');
+      console.log('AndroidVoiceRecording initialized successfully');
     } catch (error) {
-      console.error('AndroidVoiceRecognition initialization failed:', error);
+      console.error('AndroidVoiceRecording initialization failed:', error);
       console.warn('Using fallback initialization for mobile compatibility');
     }
   }
@@ -93,8 +75,8 @@ class AndroidVoiceRecognition {
       }
 
       // AudioContextの再開
-      if (this.audioContext!.state === 'suspended') {
-        await this.audioContext!.resume();
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
       }
 
       // マイクアクセス
@@ -114,80 +96,17 @@ class AndroidVoiceRecognition {
       };
 
       this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      // AudioWorkletNodeの作成（エラーハンドリング追加）
-      try {
-        if (this.audioContext && !this.isAndroid) {
-          this.audioWorkletNode = new AudioWorkletNode(
-            this.audioContext,
-            'android-audio-processor'
-          );
 
-          // AudioWorkletメッセージハンドラー
-          this.audioWorkletNode.port.onmessage = (event) => {
-            const { type, data } = event.data;
-            
-            switch (type) {
-              case 'recording-started':
-                console.log('AudioWorklet recording started');
-                break;
-              case 'recording-complete':
-                this.handleAudioWorkletComplete(event.data);
-                break;
-              /*case 'audio-level':
-                if (this.onAudioLevel) {
-                  this.onAudioLevel(data.rms);
-                }
-                break;*/
-              case 'silence-detected':
-                console.log('Silence detected:', data);
-                break;
-              case 'buffer-overflow':
-                console.warn('Audio buffer overflow:', data.message);
-                this.stopRecording();
-                break;
-            }
-          };
-
-          // 音声ストリームをAudioWorkletに接続
-          const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-          source.connect(this.audioWorkletNode);
-          this.audioWorkletNode.connect(this.audioContext.destination);
-        }
-      } catch (error) {
-        console.warn('AudioWorklet setup failed, using MediaRecorder only:', error);
-      }
-
-      // MediaRecorderの設定（フォールバック用）
+      // MediaRecorderの設定
       this.setupMediaRecorder();
-
-      // Web Speech APIの設定（利用可能な場合）
-      this.setupSpeechRecognition();
 
       // 録音開始
       this.recordingStartTime = Date.now();
       this.audioChunks = [];
 
-      // AudioWorkletに録音開始を通知
-      if (this.audioWorkletNode) {
-        this.audioWorkletNode.port.postMessage({
-          command: 'start',
-          data: {
-            sampleRate: this.isAndroid ? 16000 : 44100,
-            noiseGate: 0.005,
-            silenceThreshold: 0.01
-          }
-        });
-      }
-
       // MediaRecorder開始
       if (this.mediaRecorder) {
         this.mediaRecorder.start(100);
-      }
-
-      // Speech Recognition開始
-      if (this.speechRecognition) {
-        this.speechRecognition.start();
       }
       
       if (this.onRecordingStateChange) {
@@ -247,103 +166,14 @@ class AndroidVoiceRecognition {
     };
   }
 
-  // Web Speech APIの設定
-  private setupSpeechRecognition(): void {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.log('Speech Recognition not supported');
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    this.speechRecognition = new SpeechRecognition();
-
-    // Android向け設定最適化
-    this.speechRecognition.lang = 'ja-JP';
-    this.speechRecognition.continuous = !this.isAndroid; // Androidでは連続認識を無効
-    this.speechRecognition.interimResults = true;
-    this.speechRecognition.maxAlternatives = 1;
-
-    let finalTranscript = '';
-    let interimTranscript = '';
-
-    this.speechRecognition.onresult = (event: any) => {
-      finalTranscript = '';
-      interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      const combinedTranscript = finalTranscript + interimTranscript;
-      if (this.onTranscriptUpdate) {
-        this.onTranscriptUpdate(combinedTranscript);
-      }
-    };
-
-    this.speechRecognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      
-      // Android向けエラーハンドリング
-      if (this.isAndroid && event.error === 'no-speech') {
-        // Androidでは無音エラーを無視
-        return;
-      }
-      
-      if (this.onError) {
-        this.onError(`音声認識エラー: ${event.error}`);
-      }
-    };
-
-    this.speechRecognition.onend = () => {
-      console.log('Speech recognition ended');
-      
-      // Android向け自動再起動
-      if (this.isAndroid && this.mediaStream) {
-        setTimeout(() => {
-          if (this.speechRecognition && this.mediaStream) {
-            try {
-              this.speechRecognition.start();
-            } catch (error) {
-              console.log('Speech recognition restart failed:', error);
-            }
-          }
-        }, 100);
-      }
-    };
-  }
-
-  // AudioWorklet完了処理
-  private handleAudioWorkletComplete(data: any): void {
-    console.log('AudioWorklet recording complete:', data);
-    // 必要に応じて高品質音声データの処理を実装
-  }
-
   // 録音停止
   async stopRecording(): Promise<AudioRecording | null> {
     try {
       const duration = Date.now() - this.recordingStartTime;
 
-      // AudioWorklet停止
-      if (this.audioWorkletNode) {
-        this.audioWorkletNode.port.postMessage({ command: 'stop' });
-        this.audioWorkletNode.disconnect();
-        this.audioWorkletNode = null;
-      }
-
       // MediaRecorder停止
       if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
         this.mediaRecorder.stop();
-      }
-
-      // Speech Recognition停止
-      if (this.speechRecognition) {
-        this.speechRecognition.stop();
-        this.speechRecognition = null;
       }
 
       // ストリーム停止
@@ -366,7 +196,6 @@ class AndroidVoiceRecognition {
         const recording: AudioRecording = {
           id: Date.now().toString(),
           timestamp: new Date(),
-          transcript: '', // 最終的な文字起こし結果
           audioBlob,
           audioUrl,
           duration
@@ -380,18 +209,16 @@ class AndroidVoiceRecognition {
 
     } catch (error) {
       console.error('Recording stop failed:', error);
-      return null; // エラーでもnullを返して継続
+      return null;
     }
   }
 
   // コールバック設定
   setCallbacks(callbacks: {
-    onTranscriptUpdate?: (transcript: string) => void;
     onRecordingStateChange?: (isRecording: boolean) => void;
     onError?: (error: string) => void;
     onAudioLevel?: (level: number) => void;
   }): void {
-    this.onTranscriptUpdate = callbacks.onTranscriptUpdate;
     this.onRecordingStateChange = callbacks.onRecordingStateChange;
     this.onError = callbacks.onError;
     this.onAudioLevel = callbacks.onAudioLevel;
@@ -404,18 +231,12 @@ class AndroidVoiceRecognition {
       this.mediaStream = null;
     }
     
-    if (this.audioWorkletNode) {
-      this.audioWorkletNode.disconnect();
-      this.audioWorkletNode = null;
-    }
-    
     if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();
       this.audioContext = null;
     }
     
     this.audioChunks = [];
-    this.speechRecognition = null;
     this.mediaRecorder = null;
   }
 
@@ -431,30 +252,25 @@ class AndroidVoiceRecognition {
 // React Hook
 export const useAndroidVoiceRecognition = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState(''); // 空文字列で初期化（バックエンドから取得）
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
   
-  const voiceRecognitionRef = useRef<AndroidVoiceRecognition | null>(null);
-  const accumulatedTranscriptRef = useRef<string>('');
+  const voiceRecordingRef = useRef<AndroidVoiceRecording | null>(null);
 
   // 初期化
   useEffect(() => {
-    voiceRecognitionRef.current = new AndroidVoiceRecognition();
+    voiceRecordingRef.current = new AndroidVoiceRecording();
     
-    voiceRecognitionRef.current.setCallbacks({
-      onTranscriptUpdate: (newTranscript) => {
-        accumulatedTranscriptRef.current = newTranscript;
-        setTranscript(newTranscript);
-      },
+    voiceRecordingRef.current.setCallbacks({
       onRecordingStateChange: setIsRecording,
       onError: setError,
       onAudioLevel: setAudioLevel
     });
 
     return () => {
-      if (voiceRecognitionRef.current) {
-        voiceRecognitionRef.current.cleanup();
+      if (voiceRecordingRef.current) {
+        voiceRecordingRef.current.cleanup();
       }
     };
   }, []);
@@ -463,11 +279,10 @@ export const useAndroidVoiceRecognition = () => {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      accumulatedTranscriptRef.current = '';
       setTranscript('');
       
-      if (voiceRecognitionRef.current) {
-        await voiceRecognitionRef.current.startRecording();
+      if (voiceRecordingRef.current) {
+        await voiceRecordingRef.current.startRecording();
       }
     } catch (error) {
       console.error('Start recording failed:', error);
@@ -478,13 +293,8 @@ export const useAndroidVoiceRecognition = () => {
   // 録音停止
   const stopRecording = useCallback(async (): Promise<AudioRecording | null> => {
     try {
-      if (voiceRecognitionRef.current) {
-        const recording = await voiceRecognitionRef.current.stopRecording();
-        
-        if (recording && accumulatedTranscriptRef.current) {
-          recording.transcript = accumulatedTranscriptRef.current;
-        }
-        
+      if (voiceRecordingRef.current) {
+        const recording = await voiceRecordingRef.current.stopRecording();
         return recording;
       }
       return null;
@@ -496,7 +306,7 @@ export const useAndroidVoiceRecognition = () => {
   }, []);
 
   // プラットフォーム情報
-  const platformInfo = voiceRecognitionRef.current?.getPlatformInfo() || {
+  const platformInfo = voiceRecordingRef.current?.getPlatformInfo() || {
     isAndroid: false,
     isChrome: false
   };

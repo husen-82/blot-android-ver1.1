@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { calculateMemoSize } from '../utils/sizeCalculator';
 import { AudioRecording } from './IndexedDBAudio';
-import { fetchTranscribedText } from './getBackend';
+import { pollTranscribedText } from './getBackend';
 
 export interface Memo {
   id: number;
@@ -513,8 +513,7 @@ export const useMemos = () => {
   const addAudioMemo = useCallback(
     async (
       audioRecording: AudioRecording, 
-      additionalText?: string, 
-      backendUrl: string = 'http://localhost:5000/api/transcribe'  // 追加のテキストを取得するためのバックエンドURL
+      backendUrl: string = 'http://localhost:5000/api/transcribe'
     ) => {
     if (memos.length >= 15) {
       alert('メモの数が上限（15個）に達しました。古いメモを削除してください。');
@@ -522,29 +521,24 @@ export const useMemos = () => {
     }
 
     try {
-      let combinedText = audioRecording.transcript;
-
-      // バックエンドから文字起こしテキスト取得
-      if (backendUrl) {
-        const backendText = await fetchTranscribedText(
-          audioRecording.audioBlob,
-          audioRecording.transcript,
-          backendUrl
-        );
-        if (backendText) {
-          combinedText = backendText; // 上書き
-        }
+      // バックエンドから文字起こし結果を取得（ポーリング）
+      console.log('Polling for transcription result...');
+      const transcriptionResult = await pollTranscribedText(audioRecording.id, backendUrl);
+      
+      let transcriptText = '音声認識処理中...';
+      if (transcriptionResult) {
+        transcriptText = transcriptionResult.transcript;
+        console.log('Transcription completed:', transcriptText);
+      } else {
+        console.warn('Transcription failed or timed out');
+        transcriptText = '音声認識に失敗しました';
       }
 
-      if (additionalText) {
-        combinedText += `\n\n${additionalText.trim()}`;
-      }
-
-      const memoType = additionalText ? 'mixed' : 'audio';
+      const memoType = 'audio';
 
       const newMemo: Memo = {
         id: Date.now(),
-        text: combinedText,
+        text: transcriptText,
         audioRecording,
         createdAt: Date.now(),
         currentSize: 1.0,

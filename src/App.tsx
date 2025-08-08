@@ -5,21 +5,27 @@ import { CalendarPopup } from './components/CalendarPopup';
 import { MemoItem } from './components/MemoItem';
 import { useMemos } from './hooks/IndexedDBMemo';
 import { useAndroidVoiceRecognition } from './hooks/AndroidVoiceRecognition';
+import { useAudioRecording } from './hooks/IndexedDBAudio';
+import { sendAudioToBackend } from './hooks/sentBackend';
 import { usePWAManager } from './hooks/PWAManager';
 
 function App() {
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showTranscriptionPanel, setShowTranscriptionPanel] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { memos, sortedMemos, changeSortOrder, addAudioMemo, deleteMemo, updateMemoSizes } = useMemos();
   const { 
     isRecording, 
-    transcript, 
     audioLevel, 
     error, 
     startRecording, 
-    stopRecording, 
+    stopRecording,
     platformInfo 
   } = useAndroidVoiceRecognition();
+  
+  const { 
+    saveAudioRecording, 
+    sendAudioToBackendAndSave 
+  } = useAudioRecording();
   
   const { isOnline } = usePWAManager();
 
@@ -69,15 +75,41 @@ function App() {
   const handleVoiceInput = async () => {
     try {
       if (isRecording) {
+        setIsProcessing(true);
         const audioRecording = await stopRecording();
-        if (audioRecording && audioRecording.transcript.trim()) {
-          addAudioMemo(audioRecording);
+        
+        if (audioRecording) {
+          // 1. IndexedDBに音声を保存
+          await saveAudioRecording(audioRecording);
+          
+          // 2. バックエンドに音声を送信
+          const backendUrl = 'http://localhost:5000/api/transcribe'; // 実際のバックエンドURLに変更
+          const sendSuccess = await sendAudioToBackendAndSave(audioRecording, backendUrl);
+          
+          if (sendSuccess) {
+            // 3. メモとして保存（バックエンドから文字起こし結果を取得）
+            await addAudioMemo(audioRecording, backendUrl);
+          } else {
+            // バックエンド送信失敗時のフォールバック
+            const fallbackMemo = {
+              id: Date.now(),
+              text: 'バックエンドへの送信に失敗しました。音声データは保存されています。',
+              audioRecording,
+              createdAt: Date.now(),
+              currentSize: 1.0,
+              type: 'audio' as const
+            };
+            // 直接メモリストに追加（IndexedDBには保存しない）
+            console.warn('Backend send failed, showing fallback message');
+          }
         }
+        setIsProcessing(false);
       } else {
         await startRecording();
       }
     } catch (error) {
       console.error('音声入力エラー:', error);
+      setIsProcessing(false);
     }
   };
 
@@ -139,20 +171,28 @@ function App() {
       >
         {/* テキスト化パネル表示切り替えボタン */}
         {/* 音声認識状態表示 */}
-        {isRecording && (
+        {(isRecording || isProcessing) && (
           <div className="fixed top-20 left-4 right-4 z-40 bg-red-500 text-white p-3 rounded-lg shadow-lg animate-fade-in">
             <div className="flex items-center justify-between">
-              <span className="font-medium">音声認識中...</span>
+              <span className="font-medium">
+                {isRecording ? '録音中...' : '処理中...'}
+              </span>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-sm">{Math.round(audioLevel * 100)}%</span>
+                {isRecording && (
+                  <>
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    <span className="text-sm">{Math.round(audioLevel * 100)}%</span>
+                  </>
+                )}
+                {isProcessing && (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
               </div>
             </div>
-            {transcript && (
-              <div className="mt-2 text-sm bg-white bg-opacity-20 p-2 rounded">
-                {transcript}
-              </div>
-            )}
+            <div className="mt-2 text-sm bg-white bg-opacity-20 p-2 rounded">
+              {isRecording && '音声を録音しています...'}
+              {isProcessing && 'バックエンドで文字起こし処理中...'}
+            </div>
           </div>
         )}
 
@@ -223,7 +263,7 @@ function App() {
             audioLevel={audioLevel}
             onStartRecording={handleVoiceInput}
             onStopRecording={handleVoiceInput}
-            disabled={false}
+            disabled={isProcessing}
           />
         </div>
 
