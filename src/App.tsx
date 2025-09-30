@@ -17,7 +17,6 @@ function App() {
     isRecording, 
     audioLevel, 
     error, 
-    isInitialized,
     startRecording, 
     stopRecording,
     platformInfo 
@@ -76,31 +75,21 @@ function App() {
   // 音声入力処理（Android最適化版）
   const handleVoiceInput = async () => {
     try {
-      if (!isInitialized) {
-        console.error('Voice recording system not initialized');
-        return;
-      }
-
       if (isRecording) {
         setIsProcessing(true);
         const audioRecording = await stopRecording();
         
         if (audioRecording) {
-          console.log('Audio recording completed:', audioRecording);
-          
           // 1. IndexedDBに音声を保存
           await saveAudioRecording(audioRecording);
-          console.log('Audio saved to IndexedDB');
           
           // 2. バックエンドに音声を送信
-          const backendUrl = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe';
+          const backendUrl = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'; // 実際のバックエンドURLに変更
           const sendSuccess = await sendAudioToBackendAndSave(audioRecording, backendUrl);
-          console.log('Backend send result:', sendSuccess);
           
           if (sendSuccess) {
             // 3. メモとして保存（バックエンドから文字起こし結果を取得）
             await addAudioMemo(audioRecording, backendUrl);
-            console.log('Audio memo added successfully');
           } else {
             // バックエンド送信失敗時のフォールバック
             const fallbackMemo = {
@@ -114,8 +103,6 @@ function App() {
             // 直接メモリストに追加（IndexedDBには保存しない）
             console.warn('Backend send failed, showing fallback message');
           }
-        } else {
-          console.warn('No audio recording data received');
         }
         setIsProcessing(false);
       } else {
@@ -267,7 +254,7 @@ function App() {
           </button>
         </div>
         
-　　　{/* Android最適化音声入力ボタン */}
+        {/* Android最適化音声入力ボタン */}
         <div 
           className="flex-1 flex justify-center"
           style={{ pointerEvents: 'auto' }}
