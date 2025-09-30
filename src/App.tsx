@@ -277,7 +277,7 @@ function App() {
             audioLevel={audioLevel}
             onStartRecording={handleVoiceInput}
             onStopRecording={handleVoiceInput}
-            disabled={isProcessing || audioDbLoading}
+            /*disabled={isProcessing || audioDbLoading}*/
           />
         </div>
 
