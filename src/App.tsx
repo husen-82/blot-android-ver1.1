@@ -24,7 +24,8 @@ function App() {
   
   const { 
     saveAudioRecording, 
-    sendAudioToBackendAndSave 
+    sendAudioToBackendAndSave,
+    isLoading: audioDbLoading
   } = useAudioRecording();
   
   const { isOnline } = usePWAManager();
@@ -263,7 +264,7 @@ function App() {
             audioLevel={audioLevel}
             onStartRecording={handleVoiceInput}
             onStopRecording={handleVoiceInput}
-            disabled={isProcessing}
+            disabled={isProcessing || audioDbLoading}
           />
         </div>
 
