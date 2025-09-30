@@ -139,6 +139,11 @@ export const useAudioRecording = () => {
     }
   }, []);
 
+  //追加Hook初回マウント時に自動初期化
+  useEffect(() => {
+    initialize();
+  },[]); //空の依存配列で一度だけ実行
+
   // 音声録音を保存
   const saveAudioRecording = useCallback(async (recording: AudioRecording): Promise<void> => {
     try {
