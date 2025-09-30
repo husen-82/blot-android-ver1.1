@@ -267,7 +267,7 @@ function App() {
           </button>
         </div>
         
-        {/* Android最適化音声入力ボタン */}
+　　　{/* Android最適化音声入力ボタン */}
         <div 
           className="flex-1 flex justify-center"
           style={{ pointerEvents: 'auto' }}
@@ -277,7 +277,7 @@ function App() {
             audioLevel={audioLevel}
             onStartRecording={handleVoiceInput}
             onStopRecording={handleVoiceInput}
-            disabled={isProcessing || audioDbLoading || !isInitialized}
+            disabled={isProcessing || audioDbLoading}
           />
         </div>
 
