@@ -285,6 +285,8 @@ function App() {
             </div>
           )}
         </div>
+          )}
+        </div>
 
         <div className="flex-1" style={{ pointerEvents: 'none' }}></div>
       </footer>
