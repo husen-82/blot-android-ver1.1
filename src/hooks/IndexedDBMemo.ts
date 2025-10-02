@@ -522,17 +522,8 @@ export const useMemos = () => {
     }
 
     try {
-      // １．バックエンドにPOSTで送信、処理を開始させる
-      console.log('1.Sending audio to backend to start transcription...');
-      const postSuccess = await sendAudioFn(audioRecording, backendUrl);
-
-      if (!postSuccess){
-        console.error('Audio transmission failed. Aborting polling.');
-        return null;
-      }
-
-      // ２．POST成功後、結果をポーリング開始
-      console.log('2. POST successful (202). Starting polling flr transcription result...');
+      console.log('Starting polling for transcription result...');
+      // ２．POST成功後、結果をポーリング開始(ここでGET発火）
       const transcriptionResult = await pollTranscribedText(audioRecording.id, backendUrl);
       
       let transcriptText = '音声認識処理中...';
