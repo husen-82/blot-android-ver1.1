@@ -197,15 +197,17 @@ class AndroidVoiceRecording {
     
     // Android向けコーデック最適化
     if (this.isAndroid) {
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        options.mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
         options.mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        options.mimeType = 'audio/webm;codecs=opus';
       } else if (MediaRecorder.isTypeSupported('audio/wav')) {
         options.mimeType = 'audio/wav';
       }
     } else {
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        options.mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
         options.mimeType = 'audio/webm;codecs=opus';
       } else if (MediaRecorder.isTypeSupported('audio/wav')) {
         options.mimeType = 'audio/wav';
