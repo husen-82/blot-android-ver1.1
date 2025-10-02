@@ -514,15 +514,26 @@ export const useMemos = () => {
     async (
       audioRecording: AudioRecording, 
       backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
+      //外部からの受取想定
+      sendAudioFn: (recording:AudioRecording, url: string) => Promise<boolean>
     ) => {
     if (memos.length >= 15) {
-      alert('メモの数が上限（15個）に達しました。古いメモを削除してください。');
+      console.warn('メモの数が上限（15個）に達しました。古いメモを削除してください。');
       return null;
     }
 
     try {
-      // バックエンドから文字起こし結果を取得（ポーリング）
-      console.log('Polling for transcription result...');
+      // １．バックエンドにPOSTで送信、処理を開始させる
+      console.log('1.Sending audio to backend to start transcription...');
+      const postSuccess = await sendAudioFn(audioRecording, backendUrl);
+
+      if (!postSuccess){
+        console.error('Audio transmission failed. Aborting polling.');
+        return null;
+      }
+
+      // ２．POST成功後、結果をポーリング開始
+      console.log('2. POST successful (202). Starting polling flr transcription result...');
       const transcriptionResult = await pollTranscribedText(audioRecording.id, backendUrl);
       
       let transcriptText = '音声認識処理中...';
@@ -551,7 +562,6 @@ export const useMemos = () => {
       return newMemo;
     } catch (error) {
       console.error('音声メモの保存に失敗:', error);
-      alert('メモの保存に失敗しました');
       return null;
     }
   }, [memos.length, dbRef]);
