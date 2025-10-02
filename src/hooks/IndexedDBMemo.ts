@@ -513,7 +513,7 @@ export const useMemos = () => {
   const addAudioMemo = useCallback(
     async (
       audioRecording: AudioRecording, 
-      backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe'
+      backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe',
       //外部からの受取想定
       sendAudioFn: (recording:AudioRecording, url: string) => Promise<boolean>
     ) => {

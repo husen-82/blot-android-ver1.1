@@ -99,7 +99,7 @@ function App() {
           
           if (sendSuccess) {
             // 3. メモとして保存（バックエンドから文字起こし結果を取得）
-            await addAudioMemo(audioRecording, backendUrl);
+            await addAudioMemo(audioRecording, backendUrl, sendAudioToBackendAndSave);
             console.log('Audio memo added successfully');
           } else {
             // バックエンド送信失敗時のフォールバック

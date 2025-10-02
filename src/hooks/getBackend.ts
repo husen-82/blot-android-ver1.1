@@ -16,32 +16,32 @@ export const fetchTranscribedText = async (
       },
     });
 
-    //　serverが200okを返した場合のみ、jsonを解析
-    if (!response.status === 200) {
+    // serverが200okを返した場合のみ、jsonを解析
+    if (response.status === 200) {
       const data = await response.json();
     
-    if (data.transcript) {
-      console.log('Transcribed text received:', data.transcript);
-      return {
-        transcript: data.transcript,
-        confidence: data.confidence || undefined
-      };
-    }
-  } else if (response.status === 404){
+      if (data.transcript) {
+        console.log('Transcribed text received:', data.transcript);
+        return {
+          transcript: data.transcript,
+          confidence: data.confidence || undefined
+        };
+      }
+    } else if (response.status === 404) {
       // 404（処理中）は結果なしとして処理を継続
-    console.log('Transcription result not yet ready or ID not found (404). ');
+      console.log('Transcription result not yet ready or ID not found (404).');
+      return null;
+    } else {
+      console.error('Backend response error:', response.status, response.statusText);
+      return null;
+    }
+
     return null;
-  } else {
-    console.error('Backend response error:', response.status, response.statusText);
+   
+  } catch (error) {
+    console.error('文字起こし結果取得エラー：', error);
     return null;
   }
-
-  return null;
-   
-}catch (error){
- console.error('文字起こし結果取得エラー：', error);
- return null;
-}
 };
 
 // ポーリングで文字起こし結果を取得する関数
