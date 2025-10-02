@@ -1,3 +1,5 @@
+import{AudioRecording} from './IndexedDBAudio';
+
 // バックエンドから文字起こし結果を取得する関数
 export const fetchTranscribedText = async (
   audioId: string,
@@ -14,12 +16,9 @@ export const fetchTranscribedText = async (
       },
     });
 
-    if (!response.ok) {
-      console.error('Backend response error:', response.status, response.statusText);
-      return null;
-    }
-
-    const data = await response.json();
+    //　serverが200okを返した場合のみ、jsonを解析
+    if (!response.status === 200) {
+      const data = await response.json();
     
     if (data.transcript) {
       console.log('Transcribed text received:', data.transcript);
@@ -28,12 +27,21 @@ export const fetchTranscribedText = async (
         confidence: data.confidence || undefined
       };
     }
-
+  } else if (response.status === 404){
+      // 404（処理中）は結果なしとして処理を継続
+    console.log('Transcription result not yet ready or ID not found (404). ');
     return null;
-  } catch (error) {
-    console.error('文字起こし結果取得エラー:', error);
+  } else {
+    console.error('Backend response error:', response.status, response.statusText);
     return null;
   }
+
+  return null;
+   
+}catch (error){
+ console.error('文字起こし結果取得エラー：', error);
+ return null;
+}
 };
 
 // ポーリングで文字起こし結果を取得する関数
