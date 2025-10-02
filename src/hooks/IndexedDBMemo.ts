@@ -515,7 +515,6 @@ export const useMemos = () => {
       audioRecording: AudioRecording, 
       backendUrl: string = 'https://settling-crisp-falcon.ngrok-free.app/api/transcribe',
       //外部からの受取想定
-      sendAudioFn: (recording:AudioRecording, url: string) => Promise<boolean>
     ) => {
     if (memos.length >= 15) {
       console.warn('メモの数が上限（15個）に達しました。古いメモを削除してください。');
